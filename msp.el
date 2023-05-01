@@ -3,23 +3,25 @@
   :group 'convenience)
 
 (defcustom msp-process-buffer-name " *msp-process-buffer*"
-  "Name of the buffer that hold prettier buffer"
+  "Name of the buffer that hold prettier process"
   :group 'msp
   :type 'string)
 
 
 (defcustom msp-prettier-path "prettier"
-  "Name of file to look for files to ignore by prettier"
+  "Path of prettier binary"
   :group 'msp
   :type 'string)
 
 (defcustom msp-ignore-file '(".prettierignore")
-  "Name of file to look for files to ignore by prettier"
+  "Specify the name of the files that should be searched to determine
+the --ignore-path option"
   :group 'msp
   :type '(string))
 
 (defcustom msp-config-file '(".prettierrc" ".prettierrc.js")
-  "Name of file to look for files to ignore by prettier"
+  "Specify the name of the files that should be searched to determine
+the --config option"
   :group 'msp
   :type '(string))
 
@@ -28,8 +30,7 @@
 
 
 (defun msp--find-config-file (dir patterns)
-  "Find config file in DIR according to
-`msp-config-file'"
+  "Find the first file in DIR that is inside PATTERNS."
   (let ((default-directory dir))
 	(catch 'match
 	  (dolist (pattern patterns)
@@ -39,6 +40,10 @@
 
 
 (defun msp--sentinel (process event)
+  "Sentinel run by `msp-prettify'.
+
+When status is 0, takes the output of prettier and replace the
+file with it"
   (when (eq 0 (process-exit-status process))
 	(let ((output (with-current-buffer (process-buffer process)
 					(buffer-substring (point-min) (point-max))))
@@ -53,8 +58,9 @@
 	  )))
 
 (defun msp-prettify ()
-  "Takes current buffer content format it with prettier
-and replace the content"
+  "Run prettier on current buffer.
+
+First grap --ignore-path and --config files"
   (interactive)
   (let* ((root-folder (msp--get-root-directory))
 		 (ignore-file (msp--find-config-file root-folder msp-ignore-file))
