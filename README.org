@@ -1,0 +1,9 @@
+* Msp.el
+
+"MSP stands for My Simple Prettier. It's just a wrapper around the
+Prettier binary. I used to use https://github.com/jscheid/prettier.el,
+which worked very well for me. However, one day I did a git pull on
+the Emacs repository, and all of a sudden, it stopped working. My
+limited Elisp knowledge wasn't enough to troubleshoot the issue, so I
+decided to write my own wrapper instead. It's very simplistic but
+works well for my needs."
