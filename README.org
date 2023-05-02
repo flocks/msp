@@ -1,9 +1,23 @@
 * Msp.el
 
-"MSP stands for My Simple Prettier. It's just a wrapper around the
+MSP stands for My Simple Prettier. It's just a wrapper around the
 Prettier binary. I used to use https://github.com/jscheid/prettier.el,
 which worked very well for me. However, one day I did a git pull on
 the Emacs repository, and all of a sudden, it stopped working. My
 limited Elisp knowledge wasn't enough to troubleshoot the issue, so I
 decided to write my own wrapper instead. It's very simplistic but
-works well for my needs."
+works well for my needs.
+
+* Design
+
+The implementation is straightforward. In order to prettify a buffer,
+even if it has not been saved, we first need to write its contents to
+a temporary file. To ensure that Prettier can infer the parser, we use
+the same file extension as the original buffer. We then retrieve the
+Prettier configuration files for the project
+(`.prettierrc|.prettierrc.js`, and `.prettierignore`) and launch a
+Prettier process using `make-process`.
+
+Once Prettier has finished executing and returns a success status, we
+replace the contents of the current buffer with the prettified output,
+making sure to restore the original point and scroll position.
