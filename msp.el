@@ -45,6 +45,7 @@ the --config option"
 When status is 0, takes the output of prettier and replace the
 file with it"
   (when (eq 0 (process-exit-status process))
+	(delete-file (process-get process :tmp-file))
 	(let ((output (with-current-buffer (process-buffer process)
 					(buffer-substring (point-min) (point-max))))
 		  (file (process-name process)))
@@ -68,22 +69,20 @@ First grap --ignore-path and --config files"
 		 (file-name (buffer-file-name))
 		 (input (buffer-substring (point-min) (point-max)))
 		 (extension (format ".%s" (file-name-extension (buffer-file-name))))
-		 (tmp-file (make-temp-file "prettier" nil extension input))
-		 )
+		 (tmp-file (make-temp-file "prettier" nil extension input)))
 	(when (get-buffer msp-process-buffer-name)
 	  (with-current-buffer msp-process-buffer-name
 		(erase-buffer)))
 
-	(make-process
-	 :name file-name
-	 :buffer msp-process-buffer-name
-	 :sentinel #'msp--sentinel
-	 :command `(,msp-prettier-path
-				,tmp-file
-				"--config" ,config-file
-				"--ignore-path" ,config-file
-				"--loglevel" "silent"))
-	)
-  )
+	(let ((process (make-process
+					:name file-name
+					:buffer msp-process-buffer-name
+					:sentinel #'msp--sentinel
+					:command `(,msp-prettier-path
+							   ,tmp-file
+							   "--config" ,config-file
+							   "--ignore-path" ,config-file
+							   "--loglevel" "silent"))))
+	  (process-put process :tmp-file tmp-file))))
 
 (provide 'msp)
