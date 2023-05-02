@@ -8,6 +8,12 @@
   :type 'string)
 
 
+(defcustom msp-process-name "msp-prettier-process"
+  "Name of the process launched by msp to run prettier"
+  :group 'msp
+  :type 'string)
+
+
 (defcustom msp-prettier-path "prettier"
   "Path of prettier binary"
   :group 'msp
@@ -48,7 +54,7 @@ file with it"
 	(delete-file (process-get process :tmp-file))
 	(let ((output (with-current-buffer (process-buffer process)
 					(buffer-substring (point-min) (point-max))))
-		  (file (process-name process)))
+		  (file (process-get process :orig-file)))
 	  (with-current-buffer (get-file-buffer file)
 		(let ((point (point))
 			  (scroll (window-start)))
@@ -75,7 +81,7 @@ First grap --ignore-path and --config files"
 		(erase-buffer)))
 
 	(let ((process (make-process
-					:name file-name
+					:name msp-process-name
 					:buffer msp-process-buffer-name
 					:sentinel #'msp--sentinel
 					:command `(,msp-prettier-path
@@ -83,6 +89,7 @@ First grap --ignore-path and --config files"
 							   "--config" ,config-file
 							   "--ignore-path" ,config-file
 							   "--loglevel" "silent"))))
+	  (process-put process :orig-file file-name)
 	  (process-put process :tmp-file tmp-file))))
 
 (provide 'msp)
