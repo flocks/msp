@@ -51,30 +51,50 @@ the --config option"
 When status is 0, takes the output of prettier and replace the
 file with it"
   (when (eq 0 (process-exit-status process))
-	(delete-file (process-get process :tmp-file))
-	(let ((output (with-current-buffer (process-buffer process)
-					(buffer-substring (point-min) (point-max))))
-		  (file (process-get process :orig-file)))
+	(when (msp--files-same-p
+		   (process-get process :tmp-file)
+		   (process-get process :orig-file-copy))
+	  (delete-file (process-get process :tmp-file))
+	  (delete-file (process-get process :orig-file-copy))
+	  (user-error "Already prettified!"))
+
+	(let* ((new-file (process-get process :tmp-file))
+		   (output (with-current-buffer (find-file-noselect new-file)
+					 (buffer-substring (point-min) (point-max))))
+		   (file (process-get process :orig-file)))
 	  (with-current-buffer (get-file-buffer file)
 		(let ((point (point))
 			  (scroll (window-start)))
 		  (erase-buffer)
 		  (insert output)
 		  (goto-char point)
-		  (set-window-start nil scroll)))
-	  )))
+		  (set-window-start nil scroll))))
+
+	(delete-file (process-get process :tmp-file))
+	(delete-file (process-get process :orig-file-copy))))
+
+(defun msp--files-same-p (file1 file2)
+  "Run UNIX diff on FILE1 and FILE2.
+
+Return t if files have same contents"
+  (let ((diff-output (with-output-to-string
+                       (call-process "diff" nil standard-output nil "-q" file1 file2))))
+    (string-empty-p diff-output)))
 
 (defun msp-prettify ()
   "Run prettier on current buffer.
 
 First grap --ignore-path and --config files"
   (interactive)
+  (unless (buffer-file-name)
+	(user-error "Not a file buffer!"))
   (let* ((root-folder (msp--get-root-directory))
 		 (ignore-file (msp--find-config-file root-folder msp-ignore-file))
 		 (config-file (msp--find-config-file root-folder msp-config-file))
 		 (file-name (buffer-file-name))
 		 (input (buffer-substring (point-min) (point-max)))
 		 (extension (format ".%s" (file-name-extension (buffer-file-name))))
+		 (orig-file-copy (make-temp-file "prettier" nil extension input))
 		 (tmp-file (make-temp-file "prettier" nil extension input)))
 	(when (get-buffer msp-process-buffer-name)
 	  (with-current-buffer msp-process-buffer-name
@@ -88,7 +108,9 @@ First grap --ignore-path and --config files"
 							   ,tmp-file
 							   ,@(and config-file `( "--config" ,config-file))
 							   ,@(and ignore-file `( "--ignore-path" ,ignore-file))
+							   "-w"
 							   "--loglevel" "silent"))))
+	  (process-put process :orig-file-copy orig-file-copy)
 	  (process-put process :orig-file file-name)
 	  (process-put process :tmp-file tmp-file))))
 
