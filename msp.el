@@ -86,8 +86,8 @@ First grap --ignore-path and --config files"
 					:sentinel #'msp--sentinel
 					:command `(,msp-prettier-path
 							   ,tmp-file
-							   "--config" ,config-file
-							   "--ignore-path" ,ignore-file
+							   ,@(and config-file `( "--config" ,config-file))
+							   ,@(and ignore-file `( "--ignore-path" ,ignore-file))
 							   "--loglevel" "silent"))))
 	  (process-put process :orig-file file-name)
 	  (process-put process :tmp-file tmp-file))))
