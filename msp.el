@@ -40,7 +40,7 @@ the --config option"
   (let ((default-directory dir))
 	(catch 'match
 	  (dolist (pattern patterns)
-		(when (file-exists-p (format "%s" pattern))
+		(when (file-exists-p pattern)
 		  (throw 'match (expand-file-name pattern)))))))
 
 
