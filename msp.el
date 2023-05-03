@@ -87,7 +87,7 @@ First grap --ignore-path and --config files"
 					:command `(,msp-prettier-path
 							   ,tmp-file
 							   "--config" ,config-file
-							   "--ignore-path" ,config-file
+							   "--ignore-path" ,ignore-file
 							   "--loglevel" "silent"))))
 	  (process-put process :orig-file file-name)
 	  (process-put process :tmp-file tmp-file))))
