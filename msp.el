@@ -113,10 +113,10 @@ First grap --ignore-path and --config files"
 					 :buffer msp-process-buffer-name
 					 :sentinel #'msp--sentinel
 					 :command `(,prettier-path
+								"--write"
 								,tmp-file
 								,@(and config-file `( "--config" ,config-file))
 								,@(and ignore-file `( "--ignore-path" ,ignore-file))
-								"-w"
 								"--loglevel" "silent"))))
 	  (process-put process :orig-file-copy orig-file-copy)
 	  (process-put process :orig-file file-name)
