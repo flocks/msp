@@ -81,6 +81,13 @@ Return t if files have same contents"
                        (call-process "diff" nil standard-output nil "-q" file1 file2))))
     (string-empty-p diff-output)))
 
+(defun msp--resolve-prettier-bin (folder)
+  "Search for local prettier bin in FOLDER, fallback to `msp-prettier-path"
+  ;; TODO make this more generic
+  (let ((local-prettier (format "%snode_modules/.bin/prettier" folder)))
+	(or (and (file-exists-p local-prettier) local-prettier)
+		msp-prettier-path)))
+
 (defun msp-prettify ()
   "Run prettier on current buffer.
 
@@ -95,21 +102,22 @@ First grap --ignore-path and --config files"
 		 (input (buffer-substring (point-min) (point-max)))
 		 (extension (format ".%s" (file-name-extension (buffer-file-name))))
 		 (orig-file-copy (make-temp-file "prettier" nil extension input))
+		 (prettier-path (msp--resolve-prettier-bin root-folder))
 		 (tmp-file (make-temp-file "prettier" nil extension input)))
 	(when (get-buffer msp-process-buffer-name)
 	  (with-current-buffer msp-process-buffer-name
 		(erase-buffer)))
 
-	(let ((process (make-process
-					:name msp-process-name
-					:buffer msp-process-buffer-name
-					:sentinel #'msp--sentinel
-					:command `(,msp-prettier-path
-							   ,tmp-file
-							   ,@(and config-file `( "--config" ,config-file))
-							   ,@(and ignore-file `( "--ignore-path" ,ignore-file))
-							   "-w"
-							   "--loglevel" "silent"))))
+	(let* ((process (make-process
+					 :name msp-process-name
+					 :buffer msp-process-buffer-name
+					 :sentinel #'msp--sentinel
+					 :command `(,prettier-path
+								,tmp-file
+								,@(and config-file `( "--config" ,config-file))
+								,@(and ignore-file `( "--ignore-path" ,ignore-file))
+								"-w"
+								"--loglevel" "silent"))))
 	  (process-put process :orig-file-copy orig-file-copy)
 	  (process-put process :orig-file file-name)
 	  (process-put process :tmp-file tmp-file))))
