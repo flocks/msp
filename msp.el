@@ -25,7 +25,7 @@ the --ignore-path option"
   :group 'msp
   :type '(string))
 
-(defcustom msp-config-file '(".prettierrc" ".prettierrc.js")
+(defcustom msp-config-file '(".prettierrc" ".prettierrc.js" ".prettierrc.json")
   "Specify the name of the files that should be searched to determine
 the --config option"
   :group 'msp
